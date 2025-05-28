@@ -1,18 +1,18 @@
 // server/app.js
 import express from 'express';
-import { initializeDatabase, getDb } from './db.js'; // Ensure getDb is imported
+import { initializeDatabase, getDb } from './db.js';
 import multer from 'multer';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import dotenv from 'dotenv';
-import cors from 'cors';
-import fs from 'fs'; // Import file system module
+import cors from 'cors'; // Already imported
+import fs from 'fs';
 
 dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 3000;
-const UPLOAD_DIR_RELATIVE = process.env.UPLOAD_DIR || './uploads'; // Relative path for internal use
+const UPLOAD_DIR_RELATIVE = process.env.UPLOAD_DIR || './uploads';
 
 // __dirname equivalent for ES Modules
 const __filename = fileURLToPath(import.meta.url);
@@ -38,7 +38,12 @@ const storage = multer.diskStorage({
 const upload = multer({ storage: storage });
 
 // --- Middleware ---
-app.use(cors());
+// UPDATED: Configure CORS to specifically allow your Vercel frontend's domain
+app.use(cors({
+    origin: 'https://my-web-azure-eight.vercel.app', // <--- Your Vercel frontend URL
+    methods: ['GET', 'POST', 'PUT', 'DELETE'], // Allowed HTTP methods
+    allowedHeaders: ['Content-Type', 'Authorization'] // Allowed headers
+}));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
