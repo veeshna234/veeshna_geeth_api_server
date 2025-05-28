@@ -5,7 +5,7 @@ import multer from 'multer';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import dotenv from 'dotenv';
-import cors from 'cors'; // Already imported
+import cors from 'cors';
 import fs from 'fs';
 
 dotenv.config();
@@ -40,19 +40,24 @@ const upload = multer({ storage: storage });
 // --- Middleware ---
 // UPDATED: Configure CORS to specifically allow your Vercel frontend's domain
 app.use(cors({
-    origin: 'https://my-web-azure-eight.vercel.app', // <--- Your Vercel frontend URL
+    origin: 'https://my-web-azure-eight.vercel.app', // Your Vercel frontend URL
     methods: ['GET', 'POST', 'PUT', 'DELETE'], // Allowed HTTP methods
     allowedHeaders: ['Content-Type', 'Authorization'] // Allowed headers
 }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Serve static frontend files from the 'public' directory
-// Assumes 'public' is one level up from 'server'
+// Serve static frontend files from the 'public' directory (if backend was also serving frontend)
+// Note: This is not strictly necessary if your frontend is on Vercel, but harmless.
 app.use(express.static(path.join(__dirname, '../public')));
 
 // Also serve uploaded files from the 'uploads' directory
-app.use('/uploads', express.static(UPLOAD_DIR_ABSOLUTE)); // Use absolute path here too
+app.use('/uploads', express.static(UPLOAD_DIR_ABSOLUTE));
+
+// NEWLY ADDED: Serve static files from the 'source' directory for initial gallery images
+// Assumes 'source' is at the same level as 'public' relative to 'server'
+app.use('/source', express.static(path.join(__dirname, '../source')));
+
 
 // --- API Endpoints ---
 
@@ -180,7 +185,7 @@ app.delete('/api/gallery/:id', async (req, res) => {
         }
 
         if (item.src.startsWith('/uploads/')) {
-            const filePath = path.join(UPLOAD_DIR_ABSOLUTE, path.basename(item.src)); // Get filename from src
+            const filePath = path.join(UPLOAD_DIR_ABSOLUTE, path.basename(item.src));
             fs.unlink(filePath, (err) => {
                 if (err) {
                     console.error(`Failed to delete file ${filePath}:`, err);
